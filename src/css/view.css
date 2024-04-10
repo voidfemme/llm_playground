@@ -1,0 +1,63 @@
+#split-screen {
+  layout: horizontal;
+}
+
+#left-pane {
+  width: 33%;
+  border: solid white;
+}
+
+#right-pane {
+  width: 67%;
+  border: solid white;
+}
+
+ListView {
+  background: #333;
+  color: white;
+}
+
+ListView:focus {
+  border: solid cyan;
+}
+
+ListView:focus-within {
+  border: solid cyan;
+}
+
+ListItem {
+  padding: 1;
+}
+
+ListItem:hover {
+  background: #444;
+}
+
+ListItem:focus {
+  background: #555;
+}
+
+#chatbot-responses {
+  height: 80%;
+  background: #222;
+  color: white;
+  padding: 1;
+  overflow-y: scroll;
+}
+
+#input-container {
+  height: 20%;
+  align: center middle;
+}
+
+#message-input {
+  width: 70%;
+  margin-right: 1;
+}
+
+#attach-button,
+#send-button {
+  width: 15%;
+  background: #444;
+  color: white;
+}
