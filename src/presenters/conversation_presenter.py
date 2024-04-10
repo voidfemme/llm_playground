@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 import uuid
+import logging
 from src.model.conversation_manager import Branch
 from src.presenters.message_presenter import MessagePresenter
 from src.utils.file_logger import (
@@ -141,3 +142,19 @@ class ConversationPresenter:
             )
             self.main_window.clear_input_text()
             self.update_conversation_view(self.current_branch.id)
+
+    def create_new_branch(
+        self, conversation_id: str, parent_branch_id: str, new_branch_text: str
+    ):
+        try:
+            new_branch = self.conversation_manager.create_branch(
+                conversation_id, parent_branch_id
+            )
+            if new_branch:
+                message = self.conversation_manager.add_message(
+                    conversation_id, new_branch.id, "user", new_branch_text
+                )
+                if message:
+                    self.update_conversation_view(new_branch.id)
+        except Exception as e:
+            logging.error(f"Error creating new branch: {str(e)}")
