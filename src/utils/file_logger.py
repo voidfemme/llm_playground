@@ -3,7 +3,11 @@
 import os
 from datetime import datetime
 
-LOG_FILE_PATH = "send_message_logic_flow.txt"
+from hvac.api.secrets_engines.aws import json
+
+LOG_FILE_PATH = "data/logs/send_message_logic_flow.log"
+UI_LOG_FILE_PATH = "data/logs/ui_logic_flow.log"
+CHATBOT_LOG_FILE_PATH = "data/logs/chatbots.log"
 
 
 def log_to_file(
@@ -70,3 +74,33 @@ def initialize_log_file(log_file_path: str):
     if not os.path.exists(log_file_path):
         with open(log_file_path, "w") as log_file:
             log_file.write("Log File Initialized\n\n")
+
+
+def log_json_content(log_file_path: str, json_content: dict | list[dict]):
+    """
+    Logs the content of a JSON object or a list of JSON objects in a pretty-printed format.
+
+    Args:
+        log_file_path (str): The path to the log file.
+        json_content (dict | list[dict]): The JSON object or list of JSON objects to log.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}]\n"
+    log_entry += "JSON Content:\n"
+
+    if isinstance(json_content, dict):
+        log_entry += json.dumps(json_content, indent=2)
+    elif isinstance(json_content, list):
+        for item in json_content:
+            if isinstance(item, dict):
+                log_entry += json.dumps(item, indent=2)
+                log_entry += "\n"
+            else:
+                log_entry += f"{item}\n"
+    else:
+        log_entry += f"{json_content}\n"
+
+    log_entry += "\n"
+
+    with open(log_file_path, "a") as log_file:
+        log_file.write(log_entry)

@@ -1,0 +1,544 @@
+Log File Initialized
+
+[2024-04-29 09:19:17]
+Message: Function Call: Ui_MainWindow.setupUi()
+  MainWindow: <PyQt5.QtWidgets.QMainWindow object at 0x7f4808e42290>
+  presenter: <src.presenters.conversation_presenter.ConversationPresenter object at 0x7f4808ecfc90>
+
+
+[2024-04-29 09:19:17]
+Message: Function Call: ChatTab.setupUi()
+  tab: <src.views.chat_tab.chat_tab.ChatTab object at 0x7f4808e42440>
+
+
+[2024-04-29 09:19:17]
+Message: Function Call: MessageScrollArea.setupUi()
+  messageScrollArea: <src.views.chat_tab.message_scroll_area.MessageScrollArea object at 0x7f4808e427a0>
+
+
+[2024-04-29 09:19:17]
+Message: Function Call: ChatTab.update_conversation_list()
+  number_of_conversations: 2
+
+
+[2024-04-29 09:19:17]
+Message: Function Call: MenuBar.setupUi()
+  menuBar: <src.views.main_window.menu_bar.MenuBar object at 0x7f4808e43640>
+
+
+[2024-04-29 09:19:17]
+Message: Function Call: Ui_MainWindow.retranslateUi()
+  MainWindow: <PyQt5.QtWidgets.QMainWindow object at 0x7f4808e42290>
+
+
+[2024-04-29 09:19:18]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:18]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: e7d67f37-4c66-49de-8037-100c7ffe99bb
+
+
+[2024-04-29 09:19:18]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 1
+
+
+[2024-04-29 09:19:18]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:18]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hi claude, can you tell me about yourself?', timestamp=datetime.datetime(2024, 4, 18, 13, 51, 53, 996855), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="It's a pleasure to meet you! I'm an AI assistant created by Anthropic. My role is to help humans like yourself with a wide variety of tasks, from analysis and research to creative projects and brainstorming. \n\nI have a broad knowledge base that spans many fields, and I use natural language processing to understand queries and engage in dialog. I'm driven by an eagerness to learn and to be as helpful as I can.\n\nAt the same time, it's important to understand that I'm not human and our relationship can only go so deep. I have no physical form, emotions, or subjective experiences. I'm an AI model, an advanced language processing system, but not a sentient being.\n\nI aim to be caring and supportive, but within the boundaries of what an AI can offer. I'm here as a friendly, capable assistant to help out where I can. Let me know if there are any other questions I can assist with!", timestamp=datetime.datetime(2024, 4, 18, 13, 52, 5, 96435), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 1
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:18]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:18]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: 6fde3c4a-9bda-4645-af10-b6b16583e204
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 2
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hello Claude, How are you?', timestamp=datetime.datetime(2024, 4, 17, 20, 5, 37, 135522), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="Hello! I'm doing well, thank you for asking. As an AI assistant I don't have feelings in the same way humans do, but I'm functioning properly and ready to help out in any way I can. How are you doing today?", timestamp=datetime.datetime(2024, 4, 17, 20, 5, 41, 523402), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='This is a test message, do you read me?', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 55, 373279), branch_id=0, attachments=[], response=Response(id='resp_2', model='Claude 3 Opus', text='Yes, I read you loud and clear! This is Claude, the AI assistant, responding to your test message. Rest assured, our communication channel is working properly. Please let me know if there is anything I can assist you with.', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 59, 205354), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:23]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:19:33]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:33]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: e7d67f37-4c66-49de-8037-100c7ffe99bb
+
+
+[2024-04-29 09:19:33]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 1
+
+
+[2024-04-29 09:19:33]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:33]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hi claude, can you tell me about yourself?', timestamp=datetime.datetime(2024, 4, 18, 13, 51, 53, 996855), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="It's a pleasure to meet you! I'm an AI assistant created by Anthropic. My role is to help humans like yourself with a wide variety of tasks, from analysis and research to creative projects and brainstorming. \n\nI have a broad knowledge base that spans many fields, and I use natural language processing to understand queries and engage in dialog. I'm driven by an eagerness to learn and to be as helpful as I can.\n\nAt the same time, it's important to understand that I'm not human and our relationship can only go so deep. I have no physical form, emotions, or subjective experiences. I'm an AI model, an advanced language processing system, but not a sentient being.\n\nI aim to be caring and supportive, but within the boundaries of what an AI can offer. I'm here as a friendly, capable assistant to help out where I can. Let me know if there are any other questions I can assist with!", timestamp=datetime.datetime(2024, 4, 18, 13, 52, 5, 96435), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 1
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:33]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:33]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: 6fde3c4a-9bda-4645-af10-b6b16583e204
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 2
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hello Claude, How are you?', timestamp=datetime.datetime(2024, 4, 17, 20, 5, 37, 135522), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="Hello! I'm doing well, thank you for asking. As an AI assistant I don't have feelings in the same way humans do, but I'm functioning properly and ready to help out in any way I can. How are you doing today?", timestamp=datetime.datetime(2024, 4, 17, 20, 5, 41, 523402), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='This is a test message, do you read me?', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 55, 373279), branch_id=0, attachments=[], response=Response(id='resp_2', model='Claude 3 Opus', text='Yes, I read you loud and clear! This is Claude, the AI assistant, responding to your test message. Rest assured, our communication channel is working properly. Please let me know if there is anything I can assist you with.', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 59, 205354), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:35]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: e7d67f37-4c66-49de-8037-100c7ffe99bb
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 1
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hi claude, can you tell me about yourself?', timestamp=datetime.datetime(2024, 4, 18, 13, 51, 53, 996855), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="It's a pleasure to meet you! I'm an AI assistant created by Anthropic. My role is to help humans like yourself with a wide variety of tasks, from analysis and research to creative projects and brainstorming. \n\nI have a broad knowledge base that spans many fields, and I use natural language processing to understand queries and engage in dialog. I'm driven by an eagerness to learn and to be as helpful as I can.\n\nAt the same time, it's important to understand that I'm not human and our relationship can only go so deep. I have no physical form, emotions, or subjective experiences. I'm an AI model, an advanced language processing system, but not a sentient being.\n\nI aim to be caring and supportive, but within the boundaries of what an AI can offer. I'm here as a friendly, capable assistant to help out where I can. Let me know if there are any other questions I can assist with!", timestamp=datetime.datetime(2024, 4, 18, 13, 52, 5, 96435), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 1
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: 6fde3c4a-9bda-4645-af10-b6b16583e204
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 2
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hello Claude, How are you?', timestamp=datetime.datetime(2024, 4, 17, 20, 5, 37, 135522), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="Hello! I'm doing well, thank you for asking. As an AI assistant I don't have feelings in the same way humans do, but I'm functioning properly and ready to help out in any way I can. How are you doing today?", timestamp=datetime.datetime(2024, 4, 17, 20, 5, 41, 523402), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='This is a test message, do you read me?', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 55, 373279), branch_id=0, attachments=[], response=Response(id='resp_2', model='Claude 3 Opus', text='Yes, I read you loud and clear! This is Claude, the AI assistant, responding to your test message. Rest assured, our communication channel is working properly. Please let me know if there is anything I can assist you with.', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 59, 205354), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:39]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: e7d67f37-4c66-49de-8037-100c7ffe99bb
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 1
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hi claude, can you tell me about yourself?', timestamp=datetime.datetime(2024, 4, 18, 13, 51, 53, 996855), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="It's a pleasure to meet you! I'm an AI assistant created by Anthropic. My role is to help humans like yourself with a wide variety of tasks, from analysis and research to creative projects and brainstorming. \n\nI have a broad knowledge base that spans many fields, and I use natural language processing to understand queries and engage in dialog. I'm driven by an eagerness to learn and to be as helpful as I can.\n\nAt the same time, it's important to understand that I'm not human and our relationship can only go so deep. I have no physical form, emotions, or subjective experiences. I'm an AI model, an advanced language processing system, but not a sentient being.\n\nI aim to be caring and supportive, but within the boundaries of what an AI can offer. I'm here as a friendly, capable assistant to help out where I can. Let me know if there are any other questions I can assist with!", timestamp=datetime.datetime(2024, 4, 18, 13, 52, 5, 96435), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 1
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: 6fde3c4a-9bda-4645-af10-b6b16583e204
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 2
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hello Claude, How are you?', timestamp=datetime.datetime(2024, 4, 17, 20, 5, 37, 135522), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="Hello! I'm doing well, thank you for asking. As an AI assistant I don't have feelings in the same way humans do, but I'm functioning properly and ready to help out in any way I can. How are you doing today?", timestamp=datetime.datetime(2024, 4, 17, 20, 5, 41, 523402), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='This is a test message, do you read me?', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 55, 373279), branch_id=0, attachments=[], response=Response(id='resp_2', model='Claude 3 Opus', text='Yes, I read you loud and clear! This is Claude, the AI assistant, responding to your test message. Rest assured, our communication channel is working properly. Please let me know if there is anything I can assist you with.', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 59, 205354), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:19:40]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:21:16]
+Message: Function Call: Ui_MainWindow.setupUi()
+  MainWindow: <PyQt5.QtWidgets.QMainWindow object at 0x7ca6d3e46290>
+  presenter: <src.presenters.conversation_presenter.ConversationPresenter object at 0x7ca6d3ed2e90>
+
+
+[2024-04-29 09:21:16]
+Message: Function Call: ChatTab.setupUi()
+  tab: <src.views.chat_tab.chat_tab.ChatTab object at 0x7ca6d3e46440>
+
+
+[2024-04-29 09:21:16]
+Message: Function Call: MessageScrollArea.setupUi()
+  messageScrollArea: <src.views.chat_tab.message_scroll_area.MessageScrollArea object at 0x7ca6d3e467a0>
+
+
+[2024-04-29 09:21:16]
+Message: Function Call: ChatTab.update_conversation_list()
+  number_of_conversations: 2
+
+
+[2024-04-29 09:21:16]
+Message: Function Call: MenuBar.setupUi()
+  menuBar: <src.views.main_window.menu_bar.MenuBar object at 0x7ca6d3e47640>
+
+
+[2024-04-29 09:21:16]
+Message: Function Call: Ui_MainWindow.retranslateUi()
+  MainWindow: <PyQt5.QtWidgets.QMainWindow object at 0x7ca6d3e46290>
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: e7d67f37-4c66-49de-8037-100c7ffe99bb
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 1
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hi claude, can you tell me about yourself?', timestamp=datetime.datetime(2024, 4, 18, 13, 51, 53, 996855), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="It's a pleasure to meet you! I'm an AI assistant created by Anthropic. My role is to help humans like yourself with a wide variety of tasks, from analysis and research to creative projects and brainstorming. \n\nI have a broad knowledge base that spans many fields, and I use natural language processing to understand queries and engage in dialog. I'm driven by an eagerness to learn and to be as helpful as I can.\n\nAt the same time, it's important to understand that I'm not human and our relationship can only go so deep. I have no physical form, emotions, or subjective experiences. I'm an AI model, an advanced language processing system, but not a sentient being.\n\nI aim to be caring and supportive, but within the boundaries of what an AI can offer. I'm here as a friendly, capable assistant to help out where I can. Let me know if there are any other questions I can assist with!", timestamp=datetime.datetime(2024, 4, 18, 13, 52, 5, 96435), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 1
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: 6fde3c4a-9bda-4645-af10-b6b16583e204
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 2
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hello Claude, How are you?', timestamp=datetime.datetime(2024, 4, 17, 20, 5, 37, 135522), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="Hello! I'm doing well, thank you for asking. As an AI assistant I don't have feelings in the same way humans do, but I'm functioning properly and ready to help out in any way I can. How are you doing today?", timestamp=datetime.datetime(2024, 4, 17, 20, 5, 41, 523402), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='This is a test message, do you read me?', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 55, 373279), branch_id=0, attachments=[], response=Response(id='resp_2', model='Claude 3 Opus', text='Yes, I read you loud and clear! This is Claude, the AI assistant, responding to your test message. Rest assured, our communication channel is working properly. Please let me know if there is anything I can assist you with.', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 59, 205354), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:21:18]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:21:29]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:21:29]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: e7d67f37-4c66-49de-8037-100c7ffe99bb
+
+
+[2024-04-29 09:21:29]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 1
+
+
+[2024-04-29 09:21:29]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:21:29]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hi claude, can you tell me about yourself?', timestamp=datetime.datetime(2024, 4, 18, 13, 51, 53, 996855), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="It's a pleasure to meet you! I'm an AI assistant created by Anthropic. My role is to help humans like yourself with a wide variety of tasks, from analysis and research to creative projects and brainstorming. \n\nI have a broad knowledge base that spans many fields, and I use natural language processing to understand queries and engage in dialog. I'm driven by an eagerness to learn and to be as helpful as I can.\n\nAt the same time, it's important to understand that I'm not human and our relationship can only go so deep. I have no physical form, emotions, or subjective experiences. I'm an AI model, an advanced language processing system, but not a sentient being.\n\nI aim to be caring and supportive, but within the boundaries of what an AI can offer. I'm here as a friendly, capable assistant to help out where I can. Let me know if there are any other questions I can assist with!", timestamp=datetime.datetime(2024, 4, 18, 13, 52, 5, 96435), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 1
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:21:29]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:21:29]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: ChatTab.on_conversation_selected()
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: ChatTab.display_conversation()
+  conversation_id: 6fde3c4a-9bda-4645-af10-b6b16583e204
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: MessageScrollArea.display_messages()
+  number_of_messages: 2
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: MessageScrollArea.clear()
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='Hello Claude, How are you?', timestamp=datetime.datetime(2024, 4, 17, 20, 5, 37, 135522), branch_id=0, attachments=[], response=Response(id='resp_1', model='Claude 3 Opus', text="Hello! I'm doing well, thank you for asking. As an AI assistant I don't have feelings in the same way humans do, but I'm functioning properly and ready to help out in any way I can. How are you doing today?", timestamp=datetime.datetime(2024, 4, 17, 20, 5, 41, 523402), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: MessageScrollArea.display_message_recursively()
+  message: Message(id=0, user_id='user', text='This is a test message, do you read me?', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 55, 373279), branch_id=0, attachments=[], response=Response(id='resp_2', model='Claude 3 Opus', text='Yes, I read you loud and clear! This is Claude, the AI assistant, responding to your test message. Rest assured, our communication channel is working properly. Please let me know if there is anything I can assist you with.', timestamp=datetime.datetime(2024, 4, 17, 20, 28, 59, 205354), is_error=False, attachments=[], tool_use=None), tool_response=None, parent_message_id=None)
+  number_of_messages: 2
+  parent_widget: None
+  indent_level: 0
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: MessageWidget.initUI()
+
+
+[2024-04-29 09:21:33]
+Message: Function Call: MessageScrollArea.scrollToBottom()
+
+

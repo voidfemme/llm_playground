@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
+# cmd_main.py
 
+from pathlib import Path
 import anthropic
-from src.model.chatbots import AnthropicChatbot, OpenAIChatbot
+import openai
+from src.chatbots.chatbots import (
+    ChatbotContext,
+    Claude3Opus,
+    Claude3Sonnet,
+    Claude3Haiku,
+    ChatGPT4Turbo,
+)
+from src.chatbots.tools.tool_manager import ToolManager
 from src.model.conversation_manager import Conversation, ConversationManager
 from src.utils.prompt_helpers import (
     clear_and_direct,
@@ -17,6 +27,7 @@ from src.utils.prompt_helpers import (
 )
 
 anthropic = anthropic.Client()
+openai = openai.Client()
 
 
 def display_conversations(conversations, start_index):
@@ -64,7 +75,7 @@ def display_conversation_history(conversation: Conversation):
         for j, message in enumerate(branch.messages, start=1):
             print(f"{j}. User: {message.text}")
             if message.response:
-                print(f"   Assistant: {message.response}")
+                print(f"   Assistant: {message.response.text}")
         print()
 
 
@@ -102,10 +113,38 @@ def select_branch(conversation: Conversation):
                 print("Invalid choice. Please try again.")
 
 
+def select_chatbot():
+    print("Select a chatbot:")
+    print("1. Claude 3 Opus")
+    print("2. Claude 3 Sonnet")
+    print("3. Claude 3 Haiku")
+    print("4. ChatGPT 4")
+
+    while True:
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            return Claude3Opus(client=anthropic)
+        elif choice == "2":
+            return Claude3Sonnet(client=anthropic)
+        elif choice == "3":
+            return Claude3Haiku(client=anthropic)
+        elif choice == "4":
+            return ChatGPT4Turbo(client=openai)
+        else:
+            print("Invalid choice. Please try again.")
+
+
 def main():
-    # Initialize chatbot and conversation manager
-    chatbot = AnthropicChatbot(client=anthropic)  # Replace with your chatbot instance
-    conversation_manager = ConversationManager(chatbot, data_dir="data/conversations")
+    # Initialize conversation manager
+    chatbot_context = ChatbotContext(Claude3Opus(anthropic))
+    tool_manager = ToolManager()
+    conversation_manager = ConversationManager(
+        chatbot_context=chatbot_context,
+        data_dir=Path("data/conversations"),
+        tool_manager=tool_manager,
+    )
+    conversation_manager.load_conversations()
 
     while True:
         # Display main menu
@@ -121,14 +160,18 @@ def main():
 
         if choice == "1":
             # Send a message
-            conversation_manager.load_conversations()
             conversation = select_conversation(conversation_manager.conversations)
             if conversation:
                 branch = select_branch(conversation)
                 if branch:
                     message = input("Enter your message: ")
+                    chatbot_strategy = select_chatbot()
                     response = conversation_manager.add_message(
-                        conversation.id, branch.id, "user", message
+                        conversation.id,
+                        branch.id,
+                        "user",
+                        message,
+                        chatbot_strategy=chatbot_strategy,
                     )
                     if response.response:
                         print("Assistant:", response.response.text)
@@ -141,9 +184,10 @@ def main():
             # Create a new branch
             conversation = select_conversation(conversation_manager.conversations)
             if conversation:
-                parent_branch_id = input("Enter parent branch ID (optional): ")
+                parent_branch_id = int(input("Enter parent branch ID: "))
+                new_text = input("Enter new text for the branch (optional): ")
                 branch = conversation_manager.create_branch(
-                    conversation.id, parent_branch_id
+                    conversation.id, parent_branch_id, new_text=new_text
                 )
                 print(f"New branch created with ID: {branch.id}")
 
@@ -151,13 +195,12 @@ def main():
             # Create a new conversation
             conversation_title = input("Enter conversation title: ")
             conversation = conversation_manager.create_conversation(
-                conversation_title, conversation_title
+                "", conversation_title
             )
             print(f"New conversation created with ID: {conversation.id}")
 
         elif choice == "4":
             # List conversations
-            conversation_manager.load_conversations()
             print("Conversations:")
             for conversation in conversation_manager.conversations:
                 print(f"- {conversation.id}: {conversation.title}")

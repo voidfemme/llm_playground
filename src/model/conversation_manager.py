@@ -1,103 +1,117 @@
 # src/model/conversation_manager.py
-
+from abc import ABC, abstractmethod
 import json
+from typing import Any
 import uuid
 import logging
 from datetime import datetime
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict
 from pathlib import Path
+from src.chatbots.adapters.chatbot_adapter import ChatbotAdapter
+from src.chatbots.chatbot_manager import ChatbotManager
+from src.model.conversation_dataclasses import (
+    Attachment,
+    Branch,
+    Conversation,
+    Message,
+    Response,
+    ToolResponse,
+    ToolUse,
+)
 
-from src.model.chatbots import Chatbot
+from src.model.conversation_utils import ConversationUtils
+from src.model.conversation_store import ConversationStore
+from src.tools.tool_manager import Tool, ToolManager
 from src.utils.error_handling import (
-    APIError,
+    ChatbotNotFoundError,
     InvalidRequestError,
     ConversationNotFoundError,
     BranchNotFoundError,
     MessageNotFoundError,
     InvalidConversationDataError,
+    SaveConversationError,
 )
-from src.utils.file_logger import LOG_FILE_PATH, log_function_call, log_variable, initialize_log_file
+from src.utils.file_logger import (
+    LOG_FILE_PATH,
+    UI_LOG_FILE_PATH,
+    log_function_call,
+    log_variable,
+    initialize_log_file,
+)
+from src.model.branching import (
+    get_branch,
+    get_messages_up_to_branch_point,
+    regenerate_response_in_new_branch,
+    regenerate_response_in_current_branch,
+)
 
 
 initialize_log_file(LOG_FILE_PATH)
 
 
-@dataclass
-class Attachment:
-    id: str
-    type: str
-    url: str
+class ConversationManager(ConversationStore):
+    """
+    A class for managing conversations and their associated branches and messages.
 
+    The ConversationManager class provides methods for creating, retrieving, updating,
+    and deleting conversations. It also handles the generation of responses using a
+    specified chatbot strategy.
 
-@dataclass
-class Response:
-    id: str
-    model: str
-    text: str
-    timestamp: datetime
-    attachments: list[Attachment] = field(default_factory=list)
+    Attributes:
+        chatbot_context (ChatbotContext): The context of the chatbot used for generating responses.
+        data_dir (Path): The directory where conversation data is stored.
+        conversations (list[Conversation]): A list of managed conversations.
+        branch_counter (int): A counter for generating unique branch IDs.
+        message_counter (int): A counter for generating unique message IDs.
+        conversation_utils (ConversationUtils): An instance of the ConversationUtils class for \
+                utility functions.
+        tool_manager (ToolManager): The tool manager to be used for the chatbot to call functions
 
+    Methods:
+        load_conversations(): Loads conversations from the data directory.
+        save_conversation(conversation: Conversation): Saves a conversation to the data directory.
+        create_conversation(conversation_id: str, title: str) -> Conversation: Creates a new \
+                conversation.
+        get_conversation(conversation_id: str) -> Conversation: Retrieves a conversation by its ID.
+        add_message(...) -> Message: Adds a message to a conversation branch and generates a \
+                response.
+        regenerate_response(...) -> tuple[Branch, Message]: Regenerates the response for a message \
+                in a branch.
+        delete_conversation(conversation_id: str): Deletes a conversation.
+        rename_conversation(conversation_id: str, new_title: str): Renames a conversation.
+    """
 
-@dataclass
-class Message:
-    id: str
-    user_id: str
-    text: str
-    timestamp: datetime
-    attachments: list[Attachment] = field(default_factory=list)
-    response: Response | None = None
-
-
-@dataclass
-class Branch:
-    id: str
-    parent_branch_id: str | None = None
-    messages: list[Message] = field(default_factory=list)
-
-
-@dataclass
-class Conversation:
-    id: str
-    title: str
-    branches: list[Branch] = field(default_factory=list)
-
-
-class ConversationManager:
-    def __init__(self, chatbot: Chatbot, data_dir: str) -> None:
-        self.chatbot = chatbot
+    def __init__(
+        self,
+        chatbot_manager: ChatbotManager,
+        tool_manager: ToolManager,
+        conversation_utils: ConversationUtils,
+        data_dir: Path,
+    ) -> None:
         self.data_dir = Path(data_dir)
+        self.chatbot_manager = chatbot_manager
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.conversations: list[Conversation] = []
+        self.branch_counter: int = 0
+        self.message_counter: int = 0
+        self.tool_manager = tool_manager
+        self.conversation_utils = conversation_utils
+        self.current_chatbot = None
         logging.info(f"ConversationManager initialized with data directory: {data_dir}")
 
     def load_conversations(self):
         try:
             logging.info("Loading conversations from data directory...")
             self.conversations.clear()
-            for file_path in self.data_dir.glob("*.json"):
+            for file_path in self.data_dir.rglob("*.json"):
                 with file_path.open("r") as file:
                     try:
                         data = json.load(file)
                         branches = [
-                            Branch(
-                                id=branch_data["id"],
-                                parent_branch_id=branch_data.get("parent_branch_id"),
-                                messages=[
-                                    Message(
-                                        id=message_data["id"],
-                                        user_id=message_data["user_id"],
-                                        text=message_data["text"],
-                                        timestamp=message_data["timestamp"],
-                                        attachments=message_data.get("attachments", []),
-                                        response=self._create_response(
-                                            message_data.get("response")
-                                        ),
-                                    )
-                                    for message_data in branch_data.get("messages", [])
-                                ],
-                            )
+                            self._deserialize_branch(branch_data)
                             for branch_data in data.get("branches", [])
                         ]
+                        logging.debug(f"Loaded branches: {branches}")
                         conversation = Conversation(
                             id=data["id"], title=data["title"], branches=branches
                         )
@@ -114,20 +128,31 @@ class ConversationManager:
     def save_conversation(self, conversation: Conversation):
         try:
             file_path = self.data_dir / f"{conversation.id}.json"
+
+            # Assign unique IDs to the branches
+            branch_id_map = {}
+            for i, branch in enumerate(conversation.branches):
+                branch_id_map[branch.id] = i
+                branch.id = i
+
             conversation_data = {
                 "id": conversation.id,
                 "title": conversation.title,
                 "branches": [
                     {
                         "id": branch.id,
-                        "parent_branch_id": branch.parent_branch_id,
+                        "parent_branch_id": branch_id_map.get(branch.parent_branch_id),
+                        "parent_message_id": branch.parent_message_id,
                         "messages": [
                             {
                                 "id": message.id,
                                 "user_id": message.user_id,
                                 "text": message.text,
                                 "timestamp": message.timestamp,
-                                "attachments": message.attachments,
+                                "attachments": [
+                                    asdict(attachment)
+                                    for attachment in message.attachments
+                                ],
                                 "response": (
                                     asdict(message.response)
                                     if message.response
@@ -140,275 +165,224 @@ class ConversationManager:
                     for branch in conversation.branches
                 ],
             }
+
+            # Check if the conversation data has the expected structure
+            if not conversation_data["branches"]:
+                raise SaveConversationError(
+                    "Conversation has no branches", "NO_BRANCHES"
+                )
+
+            # Write the conversation data to the JSON file
             with file_path.open("w") as file:
                 json.dump(conversation_data, file, default=str, indent=2)
             logging.info(f"Conversation saved: {conversation.id}")
-        except Exception as e:
-            logging.error(f"Error saving conversation: {str(e)}")
+        except OSError as e:
+            logging.error(f"Error writing conversation file: {str(e)}")
+            raise SaveConversationError(
+                f"Error writing conversation file: {str(e)}", "FILE_WRITE_ERROR"
+            )
+        except SaveConversationError as e:
+            logging.error(str(e))
             raise
+        except Exception as e:
+            # create a SaveConversationError to propagate
+            logging.error(f"Error saving conversation: {str(e)}")
+            raise SaveConversationError(
+                f"Unexpected error: {str(e)}", "UNEXPECTED_ERROR"
+            )
 
     def create_conversation(self, conversation_id: str, title: str) -> Conversation:
         try:
-            conversation_id = str(uuid.uuid4())
+            if not conversation_id:
+                conversation_id = str(uuid.uuid4())
+            elif any(
+                conversation.id == conversation_id
+                for conversation in self.conversations
+            ):
+                raise InvalidRequestError(
+                    f"Conversation with ID '{conversation_id}' already exists"
+                )
+
+            if not title:
+                raise InvalidRequestError("Conversation title cannot be empty")
+
+            # Create the conversation instance
             conversation = Conversation(id=conversation_id, title=title)
+
+            # Create a default branch
+            default_branch = Branch(id=0, parent_branch_id=None, messages=[])
+            conversation.branches.append(default_branch)
+
+            # Add the conversation to the list of managed conversations
             self.conversations.append(conversation)
-            self.save_conversation(conversation)
             logging.info(f"New conversation created: {conversation_id}")
+
             return conversation
+        except InvalidRequestError as e:
+            logging.error(str(e))
+            raise
         except Exception as e:
             logging.error(f"Error creating conversation: {str(e)}")
             raise
 
-    def get_conversation(self, conversation_id: str) -> Conversation | None:
-        try:
-            conversation = next(
-                (conv for conv in self.conversations if conv.id == conversation_id),
-                None,
-            )
-            if conversation:
+    def get_conversation(self, conversation_id: str) -> Conversation:
+        log_function_call(
+            LOG_FILE_PATH,
+            "ConversationManager.get_conversation",
+            conversation_id=conversation_id,
+        )
+        for conversation in self.conversations:
+            if conversation.id == conversation_id:
                 logging.info(f"Retrieved conversation: {conversation_id}")
-            else:
-                logging.warning(f"Conversation not found: {conversation_id}")
-            return conversation
-        except Exception as e:
-            logging.error(f"Error retrieving conversation: {str(e)}")
-            raise
+                return conversation
+        raise ConversationNotFoundError(f"Conversation not found: {conversation_id}")
 
     def add_message(
         self,
         conversation_id: str,
-        branch_id: str,
+        branch_id: int,
         user_id: str,
         text: str,
+        current_chatbot: str,
+        parent_message_id: int | None = None,
         attachments: list[Attachment] | None = None,
-        include_context: bool = True,
+        include_context: bool = False,
         prompt_template: str = "",
-    ) -> Message | None:
+        tools: list[Tool] | None = None,
+    ) -> Message:
         try:
-            log_function_call(
-                LOG_FILE_PATH,
-                "ConversationManager.add_message",
-                conversation_id=conversation_id,
-                branch_id=branch_id,
-                user_id=user_id,
-                text=text,
-                attachments=attachments,
-                include_context=include_context,
-                prompt_template=prompt_template,
-            )
-
             conversation = self.get_conversation(conversation_id)
-            log_variable(LOG_FILE_PATH, "conversation", conversation)
 
             if conversation:
-                branch = next(
-                    (
-                        branch
-                        for branch in conversation.branches
-                        if branch.id == branch_id
-                    ),
-                    None,
-                )
-                log_variable(LOG_FILE_PATH, "branch", branch)
+                branch_dict = {branch.id: branch for branch in conversation.branches}
+                branch = branch_dict.get(branch_id)
+
                 if not branch:
-                    branch = Branch(id=branch_id)
-                    conversation.branches.append(branch)
-                    log_variable(LOG_FILE_PATH, "new_branch", branch)
+                    raise BranchNotFoundError(
+                        f"Branch not found: {branch_id} in conversation {conversation_id}"
+                    )
 
                 message = Message(
-                    id=f"msg_{len(branch.messages) + 1}",
+                    id=self.message_counter,
                     user_id=user_id,
                     text=text,
                     timestamp=datetime.now(),
+                    branch_id=branch_id,
                     attachments=attachments or [],
+                    parent_message_id=parent_message_id,
                 )
+                self.message_counter += 1
                 branch.messages.append(message)
-                log_variable(LOG_FILE_PATH, "message", message)
 
-                api_messages = self._get_messages_for_api(
-                    conversation_id,
-                    branch_id,
-                    message.id,
-                    include_context=include_context,
-                    prompt_template=prompt_template,
-                )
-                log_variable(LOG_FILE_PATH, "api_messages", api_messages)
-                logging.debug(f"API messages: {api_messages}")
-                try:
-                    response_text = self.chatbot.get_message(api_messages)
-                    log_variable(LOG_FILE_PATH, "response_text", response_text)
-                except APIError as e:
-                    logging.error(f"API error: {str(e)}")
-                    raise
-                except Exception as e:
-                    logging.error(f"Error generating response: {str(e)}")
-                    raise
+                chatbot = self.chatbot_manager.get_chatbot(current_chatbot)
 
-                if response_text:
-                    response = Response(
-                        id=f"resp_{len(branch.messages)}",
-                        model=self.chatbot.name,
-                        text=response_text,
-                        timestamp=datetime.now(),
-                    )
-                    message.response = response
-                    log_variable(LOG_FILE_PATH, "response", response)
-
-                    logging.info(
-                        f"Response generated for message {message.id} in conversation {conversation_id}, branch {branch_id}"
+                if tools and chatbot.supports_function_calling():
+                    response = chatbot.send_message_with_tools(
+                        self.conversation_utils.prepare_api_messages(
+                            conversation_id, branch_id, message.id, include_context
+                        ),
+                        tools,
                     )
                 else:
-                    logging.warning(
-                        f"No response generated for message {message.id} in conversation {conversation_id}, branch {branch_id}"
+                    response = chatbot.send_message_without_tools(
+                        self.conversation_utils.prepare_api_messages(
+                            conversation_id, branch_id, message.id, include_context
+                        )
                     )
+
+                if response.is_error:
+                    logging.error(f"Error generating response: {response.text}")
+                    raise Exception(response.text)
+
+                message.response = response
+
+                logging.info(
+                    f"Response generated for message {message.id} in conversation "
+                    f"{conversation_id}, branch {branch_id}"
+                )
 
                 self.save_conversation(conversation)
                 logging.info(
                     f"Message added to conversation {conversation_id}, branch {branch_id}"
                 )
                 return message
+            else:
+                raise ConversationNotFoundError(
+                    f"Conversation not found: {conversation_id}"
+                )
         except Exception as e:
             logging.error(f"Error adding message: {str(e)}")
-            raise
-
-    def create_branch(
-        self, conversation_id: str, parent_branch_id: str | None = None
-    ) -> Branch | None:
-        try:
-            conversation = self.get_conversation(conversation_id)
-            if conversation:
-                branch_id = f"branch_{len(conversation.branches) + 1}"
-                branch = Branch(id=branch_id, parent_branch_id=parent_branch_id)
-                conversation.branches.append(branch)
-                self.save_conversation(conversation)
-                logging.info(
-                    f"New branch created in conversation {conversation_id}: {branch_id}"
-                )
-                return branch
-        except Exception as e:
-            logging.error(f"Error creating branch: {str(e)}")
             raise
 
     def regenerate_response(
         self,
         conversation_id: str,
-        branch_id: str,
-        message_id: str,
-    ) -> tuple[Branch, Message | None] | None:
-        try:
-            conversation = self.get_conversation(conversation_id)
-            if conversation:
-                branch = next(
-                    (
-                        branch
-                        for branch in conversation.branches
-                        if branch.id == branch_id
-                    ),
-                    None,
-                )
-                if not branch:
-                    raise BranchNotFoundError(
-                        f"Branch not found: {branch_id} in conversation {conversation_id}"
-                    )
-                messages = [
-                    message for message in branch.messages if message.id <= message_id
-                ]
-                if len(messages) == len(branch.messages):
-                    # If the selected message is the last message in the branch,
-                    # regenerate the response in the current branch
-                    try:
-                        response_text = self.chatbot.get_message(
-                            self._get_messages_for_api(
-                                conversation_id, branch_id, message_id
-                            )
-                        )
-                    except APIError as e:
-                        logging.error(f"API error: {str(e)}")
-                        raise
-                    except Exception as e:
-                        logging.error(f"Error regenerating response: {str(e)}")
-                        raise
+        branch_id: int,
+        message_id: int,
+        current_chatbot: str,
+    ) -> tuple[Branch, Message]:
+        """
+        Regenerate the response for a given message in a conversation branch.
 
-                    if response_text:
-                        message = next(
-                            (
-                                message
-                                for message in branch.messages
-                                if message.id == message_id
-                            ),
-                            None,
-                        )
-                        if not message:
-                            raise MessageNotFoundError(
-                                f"Message not found: {message_id} in branch {branch_id} of conversation {conversation_id}"
-                            )
+        Args:
+            conversation_id (str): The ID of the conversation
+            branch_id (int): The ID of the branch
+            message_id (int): The ID of the message for which the response needs to be regenerated.
+            chatbot_strategy (str): The chatbot strategy to use for regenerating the response.
 
-                        response = Response(
-                            id=f"resp_{len(branch.messages)}",
-                            model=self.chatbot.name,
-                            text=response_text,
-                            timestamp=datetime.now(),
-                        )
-                        message.response = response
-                        self.save_conversation(conversation)
-                        logging.info(
-                            f"Response regenerated for message {message_id} in conversation {conversation_id}, branch {branch_id}"
-                        )
-                        return branch, message
+        Returns:
+            tuple[Branch, Message]: A tuple containing the updated branch and the new message
+            object if regeneration is successful, or raises an error if unsuccessful
+            occurs during regeneration.
 
-                else:
-                    # If the selected message is not the last message in the branch,
-                    # create a new branch and generate the response
-                    new_branch = self.create_branch(conversation_id, branch_id)
-                    if new_branch:
-                        new_branch.messages = messages
+        Raises:
+            ConversationNotFoundError: If the conversation with the given ID is not found.
+            BranchNotFoundError: If the branch with the given ID is not found in the conversation.
+            MessageNotFoundError: If the message with the given ID is not found in the branch.
+        """
+        log_function_call(
+            LOG_FILE_PATH,
+            "ConversationManager.regenerate_response",
+            conversation_id=conversation_id,
+            branch_id=branch_id,
+            message_id=message_id,
+            current_chatbot=current_chatbot,
+        )
 
-                    try:
-                        response_text = self.chatbot.get_message(
-                            self._get_messages_for_api(
-                                conversation_id, branch_id, message_id
-                            )
-                        )
-                    except APIError as e:
-                        logging.error(f"API error: {str(e)}")
-                        raise
-                    except Exception as e:
-                        logging.error(f"Error regenerating response: {str(e)}")
-                        raise
-
-                    if response_text and new_branch:
-                        message = next(
-                            (
-                                message
-                                for message in new_branch.messages
-                                if message.id == message_id
-                            ),
-                            None,
-                        )
-                        if not message:
-                            raise MessageNotFoundError(
-                                f"Message not found: {message_id} in new branch of conversation {conversation_id}"
-                            )
-                        response = Response(
-                            id=f"resp_{len(new_branch.messages)}",
-                            model=self.chatbot.name,
-                            text=response_text,
-                            timestamp=datetime.now(),
-                        )
-                        message.response = response
-                        self.save_conversation(conversation)
-                        logging.info(
-                            f"Response regenerated for message {message_id} in conversation {conversation_id}, branch {branch_id}"
-                        )
-                        return new_branch, message
-
-            logging.warning(
-                f"Failed to regenerate response for message {message_id} in conversation {conversation_id}, branch {branch_id}"
+        # Get the conversation object
+        conversation = self.get_conversation(conversation_id)
+        if not conversation:
+            raise ConversationNotFoundError(
+                f"Conversation not found: {conversation_id}"
             )
-            return None
-        except Exception as e:
-            logging.error(f"Error regenerating response: {str(e)}")
-            raise
+
+        # Get the branch object
+        branch = get_branch(conversation, branch_id)
+        log_variable(LOG_FILE_PATH, "branch", branch)
+
+        # Get the messages up to the specified message ID
+        messages = get_messages_up_to_branch_point(conversation, branch_id, message_id)
+        if not messages:
+            raise MessageNotFoundError(
+                f"Message not found: {message_id} in branch {branch_id} of "
+                f"conversation {conversation_id}"
+            )
+
+        # Get the chatbot based on the provided strategy
+        chatbot = self.chatbot_manager.get_chatbot(current_chatbot)
+
+        # Regenerate the response in the current branch if the message is the last one
+        if len(messages) == len(branch.messages):
+            new_branch, new_message = regenerate_response_in_current_branch(
+                conversation, branch, message_id, chatbot
+            )
+            return new_branch, new_message
+        else:
+            # Regenerate the response in a new branch if the message is not the last one
+            new_branch, new_message = regenerate_response_in_new_branch(
+                conversation, branch, message_id, chatbot
+            )
+            return new_branch, new_message
 
     def delete_conversation(self, conversation_id: str) -> None:
         try:
@@ -419,190 +393,165 @@ class ConversationManager:
                 if file_path.exists():
                     file_path.unlink()
                 logging.info(f"Conversation deleted: {conversation_id}")
-        except ConversationNotFoundError:
-            logging.warning(f"Conversation not found: {conversation_id}")
+        except ConversationNotFoundError as e:
+            logging.error(str(e))
+            raise
         except Exception as e:
             logging.error(f"Error deleting conversation: {str(e)}")
             raise
 
     def rename_conversation(self, conversation_id: str, new_title: str) -> None:
+        log_function_call(
+            UI_LOG_FILE_PATH,
+            "ConversationManager.rename_conversation",
+            conversation_id=conversation_id,
+            new_title=new_title,
+        )
         try:
             conversation = self.get_conversation(conversation_id)
             if conversation:
                 conversation.title = new_title
                 self.save_conversation(conversation)
-                logging.info(f"Conversation renamed: {conversation_id}")
-        except ConversationNotFoundError:
-            logging.warning(f"Conversation not found: {conversation_id}")
+                logging.info(
+                    f"Conversation renamed in backend: {conversation_id}, New title: {new_title}"
+                )
+        except ConversationNotFoundError as e:
+            logging.error(str(e))
+            raise
         except Exception as e:
             logging.error(f"Error renaming conversation: {str(e)}")
 
-    """
-    Internal functions
-    """
+    def set_current_chatbot(self, chatbot_strategy: str) -> None:
+        """
+        Set the current chatbot based on the provided chatbot strategy.
 
-    def _get_messages_for_api(
-        self,
-        conversation_id: str,
-        branch_id: str,
-        message_id: str,
-        include_context: bool = True,
-        prompt_template: str = "",
-    ) -> list[dict] | None:
-        try:
-            api_messages = []
-            conversation = self.get_conversation(conversation_id)
-            if conversation:
-                logging.debug(f"Found conversation: {conversation_id}")
-                branch = next(
-                    (
-                        branch
-                        for branch in conversation.branches
-                        if branch.id == branch_id
-                    ),
-                    None,
-                )
-                if not branch:
-                    raise BranchNotFoundError(
-                        f"Branch not found: {branch_id} in conversation {conversation_id}"
-                    )
-                logging.debug(
-                    f"Found branch: {branch_id} in conversation {conversation_id}"
-                )
-                messages = [
-                    message for message in branch.messages if message.id <= message_id
-                ]
-                logging.debug(f"Selected messages: {messages}")
-                if include_context:
-                    context_messages = self._get_context_messages(
-                        conversation_id, branch_id, message_id
-                    )
-                    logging.debug(f"Including context messages: {context_messages}")
-                    api_messages.extend(context_messages)
-                for message in messages:
-                    if isinstance(message.text, str) and message.text.strip():
-                        if not api_messages or api_messages[-1]["role"] != "user":
-                            api_messages.append(
-                                {"role": "user", "content": message.text}
-                            )
-                            logging.debug(f"Added user message: {message.text}")
-                        if message.response:
-                            if (
-                                isinstance(message.response.text, str)
-                                and message.response.text.strip()
-                            ):
-                                if (
-                                    not api_messages
-                                    or api_messages[-1]["role"] != "assistant"
-                                ):
-                                    api_messages.append(
-                                        {
-                                            "role": "assistant",
-                                            "content": message.response.text,
-                                        }
-                                    )
-                                    logging.debug(
-                                        f"Added assistant response: {message.response.text}"
-                                    )
-                    else:
-                        logging.warning(
-                            f"Skipping invalid message content: {message.text}"
-                        )
-                if prompt_template:
-                    api_messages.append({"role": "system", "content": prompt_template})
-                    logging.debug(f"Added prompt template: {prompt_template}")
-            else:
-                logging.warning(f"Conversation not found: {conversation_id}")
-            logging.debug(f"API messages: {api_messages}")
-            return api_messages
-        except BranchNotFoundError as e:
-            logging.error(f"Branch not found error: {str(e)}")
-            raise
-        except Exception as e:
-            logging.error(f"Error getting messages for API: {str(e)}")
-            raise
+        Args:
+            chatbot_strategy (str): The chatbot strategy to set as the current chatbot.
 
-    def _get_context_messages(
-        self,
-        conversation_id: str,
-        branch_id: str,
-        message_id: str,
-        num_context_messages: int = 5,
-    ) -> list[dict]:
-        try:
-            conversation = self.get_conversation(conversation_id)
-            if conversation:
-                branch = next(
-                    (
-                        branch
-                        for branch in conversation.branches
-                        if branch.id == branch_id
-                    ),
-                    None,
-                )
-                if not branch:
-                    raise BranchNotFoundError(
-                        f"Branch not found: {branch_id}, in conversation {conversation_id}"
-                    )
-                messages = [
-                    message for message in branch.messages if message.id < message_id
-                ]
-                context_messages = messages[-num_context_messages:]
-                api_messages = []
-                for message in context_messages:
-                    if not api_messages or api_messages[-1]["role"] != "user":
-                        api_messages.append({"role": "user", "content": message.text})
-                    if message.response:
-                        if not api_messages or api_messages[-1]["role"] != "assistant":
-                            api_messages.append(
-                                {"role": "assistant", "content": message.response.text}
-                            )
-                return api_messages
-            return []
-        except Exception as e:
-            logging.error(f"Error getting context messages: {str(e)}")
-            raise
+        Raises:
+            ValueError: If the provided chatbot strategy is not available.
+        """
+        if chatbot_strategy not in self.chatbot_manager.get_chatbot_names():
+            raise ValueError(f"Chatbot strategy '{chatbot_strategy}' is not available.")
+        self.current_chatbot = chatbot_strategy
 
-    def _parse_response(self, response_data) -> Response | None:
-        try:
-            if isinstance(response_data, str):
-                return json.loads(response_data)
-            return response_data
-        except json.JSONDecodeError as e:
-            logging.error(f"Error parsing response: {str(e)}")
-            raise InvalidRequestError(f"Invalid response data: {response_data}")
+    def get_current_chatbot(self) -> ChatbotAdapter:
+        """
+        Get the current chatbot.
 
-    def _create_response(self, response_data) -> Response:
-        logging.info(
-            f"Creating response with response_data: {response_data}. response_data type: {type(response_data)}"
+        Returns:
+            ChatbotAdapter: The current chatbot adapter.
+        """
+        if self.current_chatbot:
+            return self.chatbot_manager.get_chatbot(self.current_chatbot)
+        else:
+            raise ChatbotNotFoundError(
+                "No current chatbot is set in the conversation manager"
+            )
+
+    def get_chatbot_names(self) -> list[str]:
+        """
+        Get a list of available chatbot strategies.
+
+        Returns:
+            list[str]: A list of available chatbot strategies.
+        """
+        return self.chatbot_manager.get_chatbot_names()
+
+    def get_chatbots_supporting_function_calling(self) -> list[str]:
+        """
+        Get a list of chatbot strategies that support function calling.
+
+        Returns:
+            list[str]: A list of chatbot strategies that support function calling.
+        """
+        return [
+            chatbot
+            for chatbot in self.chatbot_manager.get_chatbot_names()
+            if self.chatbot_manager.get_chatbot(chatbot).supports_function_calling()
+        ]
+
+    def get_chatbots_supporting_image_understanding(self) -> list[str]:
+        """
+        Get a list of chatbot strategies that support image understanding.
+
+        Returns:
+            list[str]: A list of chatbot strategies that support image understanding.
+        """
+        return [
+            chatbot
+            for chatbot in self.chatbot_manager.get_chatbot_names()
+            if self.chatbot_manager.get_chatbot(chatbot).supports_image_understanding()
+        ]
+
+    def _deserialize_branch(self, branch_data):
+        return Branch(
+            id=branch_data["id"],
+            parent_branch_id=branch_data.get("parent_branch_id"),
+            parent_message_id=branch_data.get("parent_message_id"),
+            messages=[
+                self._deserialize_message(message_data)
+                for message_data in branch_data.get("messages", [])
+            ],
         )
-        try:
-            if response_data:
-                parsed_data = self._parse_response(response_data)
-                if parsed_data:
-                    return Response(
-                        id=parsed_data.get("id", ""),  # type: ignore
-                        model=parsed_data.get("model", ""),  # type: ignore
-                        text=parsed_data.get("text", ""),  # type: ignore
-                        timestamp=parsed_data.get("timestamp", ""),  # type: ignore
-                        attachments=parsed_data.get("attachments", []),  # type: ignore
-                    )
-                else:
-                    return Response(
-                        id="",
-                        model="",
-                        text=str(response_data),
-                        timestamp=datetime.now(),
-                        attachments=[],
-                    )
-            else:
-                return Response(
-                    id="",
-                    model="",
-                    text="",
-                    timestamp=datetime.now(),
-                    attachments=[],
-                )
-        except Exception as e:
-            logging.error(f"Error creating response: {str(e)}")
-            raise
+
+    def _deserialize_message(self, message_data):
+        return Message(
+            id=message_data["id"],
+            user_id=message_data["user_id"],
+            text=message_data["text"],
+            timestamp=datetime.fromisoformat(message_data["timestamp"]),
+            branch_id=message_data["branch_id"],
+            attachments=[
+                self._deserialize_attachment(attachment_data)
+                for attachment_data in message_data.get("attachments", [])
+            ],
+            response=self._deserialize_response(message_data.get("response")),
+            tool_response=self._deserialize_tool_response(
+                message_data.get("tool_response")
+            ),
+        )
+
+    def _deserialize_attachment(self, attachment_data):
+        return Attachment(
+            id=attachment_data["id"],
+            content_type=attachment_data["content_type"],
+            media_type=attachment_data["media_type"],
+            data=attachment_data["data"],
+            source_type=attachment_data.get("source_type", "base64"),
+            detail=attachment_data.get("detail", "auto"),
+            url=attachment_data.get("url", ""),
+        )
+
+    def _deserialize_response(self, response_data):
+        if response_data:
+            return Response(
+                id=response_data["id"],
+                model=response_data["model"],
+                text=response_data["text"],
+                timestamp=datetime.fromisoformat(response_data["timestamp"]),
+                is_error=response_data.get("is_error", False),
+                attachments=[
+                    self._deserialize_attachment(attachment_data)
+                    for attachment_data in response_data.get("attachments", [])
+                ],
+                tool_use=self._deserialize_tool_use(response_data.get("tool_use")),
+            )
+        return None
+
+    def _deserialize_tool_use(self, tool_use_data):
+        if tool_use_data:
+            return ToolUse(
+                tool_name=tool_use_data["tool_name"],
+                tool_input=tool_use_data["tool_input"],
+                tool_use_id=tool_use_data["tool_use_id"],
+            )
+        return None
+
+    def _deserialize_tool_response(self, tool_response_data):
+        if tool_response_data:
+            return ToolResponse(
+                tool_use_id=tool_response_data["tool_use_id"],
+                tool_result=tool_response_data["tool_result"],
+            )
+        return None
