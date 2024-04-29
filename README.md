@@ -1,4 +1,4 @@
-# Project Title
+# LLM Playground
 
 A multi-modal, tool-enabled language model interface with built-in tools.
 
