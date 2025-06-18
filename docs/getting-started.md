@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will help you set up and use the Chatbot Library for building conversational AI applications with advanced features like prompt management, thinking modes, and tool integration.
+This guide will help you set up and use CogniFlow for building conversational AI applications with cognitive intelligence and workflow automation, including prompt management, thinking modes, and tool integration.
 
 ## 🚀 Quick Start
 

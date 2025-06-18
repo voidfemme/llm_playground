@@ -1,6 +1,6 @@
-# Chatbot Library Documentation
+# CogniFlow Documentation
 
-Welcome to the comprehensive documentation for the Chatbot Library - a powerful, extensible framework for building conversational AI applications with advanced features like prompt management, thinking modes, iterative tool execution, and MCP (Model Context Protocol) integration.
+Welcome to the comprehensive documentation for CogniFlow - a powerful, extensible framework for building conversational AI applications with cognitive intelligence and workflow automation. Features advanced prompt management, thinking modes, iterative tool execution, and MCP (Model Context Protocol) integration.
 
 ## 📚 Documentation Structure
 

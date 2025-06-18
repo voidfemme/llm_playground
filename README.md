@@ -1,6 +1,6 @@
-# 🤖 Enhanced Chatbot Library
+# 🧠 CogniFlow
 
-A modern Python library for building sophisticated conversational AI applications with advanced features including prompt management, thinking modes, tool integration, multiple LLM providers, hot-swapping models, semantic search, and interactive web interfaces.
+A modern Python library for building sophisticated conversational AI applications with cognitive intelligence and workflow automation. Features advanced prompt management, thinking modes, tool integration, multiple LLM providers, hot-swapping models, semantic search, and more.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Models](https://img.shields.io/badge/Models-Claude%20%7C%20GPT-purple)
 
