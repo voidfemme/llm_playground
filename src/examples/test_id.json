@@ -1,0 +1,344 @@
+{
+  "id": "test_id",
+  "title": "Test Title",
+  "branches": [
+    {
+      "id": 0,
+      "parent_branch_id": null,
+      "parent_message_id": null,
+      "messages": [
+        {
+          "id": 0,
+          "user_id": "user1",
+          "text": "Message text 0",
+          "timestamp": "2024-05-11 07:04:10.434038",
+          "branch_id": 0,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_0_to_1",
+              "model": "model",
+              "text": "Response from message 0 to 1",
+              "timestamp": "2024-05-11 07:04:10.434033",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 1
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 1,
+          "user_id": "user1",
+          "text": "Message text 1",
+          "timestamp": "2024-05-11 07:04:10.434044",
+          "branch_id": 0,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_1_to_2",
+              "model": "model",
+              "text": "Response from message 1 to 2",
+              "timestamp": "2024-05-11 07:04:10.434042",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 2
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 2,
+          "user_id": "user1",
+          "text": "Message text 2",
+          "timestamp": "2024-05-11 07:04:10.434049",
+          "branch_id": 0,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_2_to_3",
+              "model": "model",
+              "text": "Response from message 2 to 3",
+              "timestamp": "2024-05-11 07:04:10.434046",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 3
+            },
+            {
+              "id": "resp_2_to_5",
+              "model": "model",
+              "text": "Special response from message 2 to 5",
+              "timestamp": "2024-05-11 07:04:10.434048",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 5
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 3,
+          "user_id": "user1",
+          "text": "Message text 3",
+          "timestamp": "2024-05-11 07:04:10.434056",
+          "branch_id": 0,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_3_to_4",
+              "model": "model",
+              "text": "Response from message 3 to 4",
+              "timestamp": "2024-05-11 07:04:10.434054",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 4
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 4,
+          "user_id": "user1",
+          "text": "Message text 4",
+          "timestamp": "2024-05-11 07:04:10.434057",
+          "branch_id": 0,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [],
+          "tool_result": null
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "parent_branch_id": null,
+      "parent_message_id": null,
+      "messages": [
+        {
+          "id": 5,
+          "user_id": "user1",
+          "text": "Message text 5",
+          "timestamp": "2024-05-11 07:04:10.434063",
+          "branch_id": 1,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_5_to_6",
+              "model": "model",
+              "text": "Response from message 5 to 6",
+              "timestamp": "2024-05-11 07:04:10.434062",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 6
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 6,
+          "user_id": "user1",
+          "text": "Message text 6",
+          "timestamp": "2024-05-11 07:04:10.434067",
+          "branch_id": 1,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_6_to_7",
+              "model": "model",
+              "text": "Response from message 6 to 7",
+              "timestamp": "2024-05-11 07:04:10.434065",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 7
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 7,
+          "user_id": "user1",
+          "text": "Message text 7",
+          "timestamp": "2024-05-11 07:04:10.434072",
+          "branch_id": 1,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_7_to_8",
+              "model": "model",
+              "text": "Response from message 7 to 8",
+              "timestamp": "2024-05-11 07:04:10.434069",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 8
+            },
+            {
+              "id": "resp_7_to_10",
+              "model": "model",
+              "text": "Special response from message 7 to 10",
+              "timestamp": "2024-05-11 07:04:10.434071",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 10
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 8,
+          "user_id": "user1",
+          "text": "Message text 8",
+          "timestamp": "2024-05-11 07:04:10.434075",
+          "branch_id": 1,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_8_to_9",
+              "model": "model",
+              "text": "Response from message 8 to 9",
+              "timestamp": "2024-05-11 07:04:10.434074",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 9
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 9,
+          "user_id": "user1",
+          "text": "Message text 9",
+          "timestamp": "2024-05-11 07:04:10.434076",
+          "branch_id": 1,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [],
+          "tool_result": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "parent_branch_id": null,
+      "parent_message_id": null,
+      "messages": [
+        {
+          "id": 10,
+          "user_id": "user1",
+          "text": "Message text 10",
+          "timestamp": "2024-05-11 07:04:10.434080",
+          "branch_id": 2,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_10_to_11",
+              "model": "model",
+              "text": "Response from message 10 to 11",
+              "timestamp": "2024-05-11 07:04:10.434079",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 11
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 11,
+          "user_id": "user1",
+          "text": "Message text 11",
+          "timestamp": "2024-05-11 07:04:10.434083",
+          "branch_id": 2,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_11_to_12",
+              "model": "model",
+              "text": "Response from message 11 to 12",
+              "timestamp": "2024-05-11 07:04:10.434082",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 12
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 12,
+          "user_id": "user1",
+          "text": "Message text 12",
+          "timestamp": "2024-05-11 07:04:10.434086",
+          "branch_id": 2,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_12_to_13",
+              "model": "model",
+              "text": "Response from message 12 to 13",
+              "timestamp": "2024-05-11 07:04:10.434085",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 13
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 13,
+          "user_id": "user1",
+          "text": "Message text 13",
+          "timestamp": "2024-05-11 07:04:10.434089",
+          "branch_id": 2,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [
+            {
+              "id": "resp_13_to_14",
+              "model": "model",
+              "text": "Response from message 13 to 14",
+              "timestamp": "2024-05-11 07:04:10.434088",
+              "is_error": false,
+              "attachments": [],
+              "tool_use": null,
+              "child_message_id": 14
+            }
+          ],
+          "tool_result": null
+        },
+        {
+          "id": 14,
+          "user_id": "user1",
+          "text": "Message text 14",
+          "timestamp": "2024-05-11 07:04:10.434091",
+          "branch_id": 2,
+          "parent_message_id": null,
+          "attachments": [],
+          "responses": [],
+          "tool_result": null
+        }
+      ]
+    }
+  ]
+}

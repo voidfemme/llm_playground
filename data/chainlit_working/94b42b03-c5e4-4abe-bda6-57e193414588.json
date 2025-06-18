@@ -1,0 +1,24 @@
+{
+  "id": "94b42b03-c5e4-4abe-bda6-57e193414588",
+  "title": "New Chat Session",
+  "created_at": "2025-06-18T13:38:19.280136",
+  "updated_at": "2025-06-18T13:38:28.344892",
+  "metadata": {},
+  "messages": [
+    {
+      "id": "1a793182-bb53-420c-b061-4f8cfdd2f301",
+      "conversation_id": "94b42b03-c5e4-4abe-bda6-57e193414588",
+      "user_id": "ui_user",
+      "text": "Hello, this is a test message",
+      "timestamp": "2025-06-18T13:38:28.344875",
+      "parent_message_id": null,
+      "attachments": [],
+      "tool_result": null,
+      "embedding": null,
+      "embedding_model": null,
+      "embedding_timestamp": null,
+      "metadata": {},
+      "responses": []
+    }
+  ]
+}

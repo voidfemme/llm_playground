@@ -1,0 +1,8 @@
+console_output: true
+log_file_paths:
+  chatbots: logs/chatbots.log
+  conversation_manager: logs/conversation_manager.log
+  ui_logic_flow: logs/ui_logic_flow.log
+log_format: '[{timestamp}] [{level}] {message}'
+log_level: INFO
+timestamp_format: '%Y-%m-%d %H:%M:%S'
