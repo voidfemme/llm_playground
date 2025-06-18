@@ -372,3 +372,93 @@ class ConversationAdapter:
         
         # Sort by compatibility score (highest first)
         return sorted(model_scores, key=lambda x: x["compatibility_score"], reverse=True)
+    
+    def adapt_for_model(
+        self,
+        conversation,
+        target_capabilities: ChatbotCapabilities,
+        context_limit: Optional[int] = None,
+        branch_name: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Adapt a conversation for a model with specific capabilities.
+        
+        This is an alias for adapt_conversation_for_model for backward compatibility.
+        """
+        return self.adapt_conversation_for_model(
+            conversation.messages,
+            target_capabilities,
+            context_limit,
+            branch_name
+        )
+    
+    def analyze_compatibility(
+        self,
+        conversation,
+        target_capabilities: ChatbotCapabilities
+    ) -> Dict[str, Any]:
+        """
+        Analyze compatibility between a conversation and target model capabilities.
+        
+        Returns:
+            Dictionary with compatibility analysis including score and issues
+        """
+        issues = []
+        compatibility_score = 1.0
+        
+        # Check for images
+        has_images = any(
+            attachment.media_type.startswith("image/")
+            for message in conversation.messages
+            for attachment in message.attachments
+        )
+        
+        if has_images and not target_capabilities.image_understanding:
+            issues.append("Conversation contains images but model doesn't support image understanding")
+            compatibility_score *= 0.7
+        
+        # Check for tool usage
+        has_tools = any(
+            response.tool_use is not None
+            for message in conversation.messages
+            for response in message.responses
+        )
+        
+        if has_tools and not target_capabilities.function_calling:
+            issues.append("Conversation contains tool usage but model doesn't support function calling")
+            compatibility_score *= 0.8
+        
+        # Check for unsupported image types
+        if target_capabilities.image_understanding and target_capabilities.supported_images:
+            unsupported_images = []
+            for message in conversation.messages:
+                for attachment in message.attachments:
+                    if (attachment.media_type.startswith("image/") and 
+                        attachment.content_type not in target_capabilities.supported_images):
+                        unsupported_images.append(attachment.content_type)
+            
+            if unsupported_images:
+                issues.append(f"Unsupported image types: {', '.join(set(unsupported_images))}")
+                compatibility_score *= 0.9
+        
+        return {
+            "compatibility_score": compatibility_score,
+            "issues": issues,
+            "is_compatible": compatibility_score > 0.5,
+            "requires_adaptation": bool(issues),
+            "recommendations": self._get_adaptation_recommendations(issues)
+        }
+    
+    def _get_adaptation_recommendations(self, issues: List[str]) -> List[str]:
+        """Get recommendations for adapting the conversation."""
+        recommendations = []
+        
+        for issue in issues:
+            if "images" in issue.lower():
+                recommendations.append("Images will be converted to text descriptions")
+            elif "tool" in issue.lower():
+                recommendations.append("Tool interactions will be summarized as text")
+            elif "image types" in issue.lower():
+                recommendations.append("Unsupported image types will be converted or described")
+        
+        return recommendations

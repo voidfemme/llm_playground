@@ -80,7 +80,7 @@ class TestResponse:
         assert response.model == "test-model"
         assert response.text == "This is a test response"
         assert response.branch_name is None
-        assert response.metadata is None
+        assert response.metadata == {}
         assert isinstance(response.timestamp, datetime)
     
     def test_response_with_branch_and_metadata(self):

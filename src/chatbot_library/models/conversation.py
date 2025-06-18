@@ -30,6 +30,9 @@ class ToolUse:
     tool_name: str
     tool_input: Dict[str, Any]
     tool_use_id: str
+    iteration: int = 1  # Which iteration of tool use this is
+    parent_tool_id: Optional[str] = None  # ID of tool that called this one
+    requires_human_approval: bool = False  # If true, needs approval before execution
 
 
 @dataclass
@@ -37,6 +40,11 @@ class ToolResult:
     """Result from tool execution."""
     tool_use_id: str
     tool_result: str
+    success: bool = True
+    error: Optional[str] = None
+    execution_time: float = 0.0
+    iteration: int = 1
+    triggered_tools: List[str] = field(default_factory=list)  # Tools called by this tool
 
 
 @dataclass
@@ -50,11 +58,18 @@ class Response:
     message_id: str  # UUID of parent message
     model: str  # Model used for generation
     text: str
-    timestamp: datetime
+    timestamp: datetime = field(default_factory=datetime.now)
     branch_name: Optional[str] = None  # "main", "alt-1", "creative", etc.
     is_error: bool = False
     attachments: List[Attachment] = field(default_factory=list)
     tool_use: Optional[ToolUse] = None
+    
+    # Prompt and thinking mode information
+    system_prompt: Optional[str] = None  # The system prompt used for this response
+    thinking_instructions: Optional[str] = None  # Thinking mode instructions used
+    thinking_trace: Optional[str] = None  # The model's thinking process (if captured)
+    prompt_template_ids: List[str] = field(default_factory=list)  # Templates used
+    
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
@@ -75,7 +90,7 @@ class Message:
     conversation_id: str  # UUID of parent conversation
     user_id: str
     text: str
-    timestamp: datetime
+    timestamp: datetime = field(default_factory=datetime.now)
     parent_message_id: Optional[str] = None  # UUID, for threading
     attachments: List[Attachment] = field(default_factory=list)
     responses: List[Response] = field(default_factory=list)
@@ -85,6 +100,11 @@ class Message:
     embedding: Optional[List[float]] = None
     embedding_model: Optional[str] = None
     embedding_timestamp: Optional[datetime] = None
+    
+    # Prompt template support
+    prompt_template_id: Optional[str] = None  # ID of template used for this message
+    thinking_mode: Optional[str] = None  # Thinking mode used ("step_by_step", "analytical", etc.)
+    prompt_context: Optional[Dict[str, Any]] = None  # Context variables used in template
     
     # Metadata for extensibility
     metadata: Dict[str, Any] = field(default_factory=dict)

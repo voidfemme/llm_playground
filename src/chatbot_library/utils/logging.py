@@ -208,42 +208,44 @@ def get_logger(name: str) -> Any:
 
 def log_function_call(logger: Any, function_name: str, **kwargs) -> None:
     """Log a function call with parameters."""
-    if hasattr(logger, 'info'):  # structlog or stdlib
-        logger.info("Function called", function=function_name, **kwargs)
-    else:
-        logger.info(f"Function called: {function_name}", **kwargs)
+    extra_info = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    message = f"Function called: {function_name}"
+    if extra_info:
+        message += f" ({extra_info})"
+    logger.info(message)
 
 
 def log_json_content(logger: Any, content: Dict[str, Any], description: str = "") -> None:
     """Log JSON content in a structured way."""
-    if hasattr(logger, 'info'):
-        logger.info("JSON content", description=description, content=content)
-    else:
-        logger.info(f"JSON content: {description}", extra={'content': content})
+    import json
+    message = f"JSON content: {description} - {json.dumps(content, default=str)}"
+    logger.info(message)
 
 
 def log_message(logger: Any, message: str, **context) -> None:
     """Log a message with context."""
-    if hasattr(logger, 'info'):
-        logger.info(message, **context)
-    else:
-        logger.info(message, extra=context)
+    if context:
+        extra_info = ", ".join(f"{k}={v}" for k, v in context.items())
+        message += f" ({extra_info})"
+    logger.info(message)
 
 
 def log_variable(logger: Any, variable_name: str, value: Any, **context) -> None:
     """Log a variable value."""
-    if hasattr(logger, 'debug'):
-        logger.debug("Variable value", variable=variable_name, value=value, **context)
-    else:
-        logger.debug(f"Variable {variable_name}", extra={'value': value, **context})
+    extra_info = ", ".join(f"{k}={v}" for k, v in context.items())
+    message = f"Variable {variable_name} = {value}"
+    if extra_info:
+        message += f" ({extra_info})"
+    logger.debug(message)
 
 
 def log_error(logger: Any, error: Exception, context: str = "", **kwargs) -> None:
     """Log an error with context."""
-    if hasattr(logger, 'error'):
-        logger.error("Error occurred", error=str(error), context=context, **kwargs)
-    else:
-        logger.error(f"Error in {context}: {error}", extra=kwargs)
+    extra_info = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    message = f"Error in {context}: {error}"
+    if extra_info:
+        message += f" ({extra_info})"
+    logger.error(message)
 
 
 def log_api_call(
@@ -256,26 +258,11 @@ def log_api_call(
     **kwargs
 ) -> None:
     """Log API calls with metrics."""
-    if hasattr(logger, 'info'):
-        logger.info(
-            "API call completed",
-            provider=provider,
-            model=model,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            duration_seconds=duration,
-            **kwargs
-        )
-    else:
-        logger.info(
-            f"API call to {provider}/{model}",
-            extra={
-                'input_tokens': input_tokens,
-                'output_tokens': output_tokens,
-                'duration_seconds': duration,
-                **kwargs
-            }
-        )
+    extra_info = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    message = f"API call to {provider}/{model} - tokens: {input_tokens}/{output_tokens}, duration: {duration:.2f}s"
+    if extra_info:
+        message += f" ({extra_info})"
+    logger.info(message)
 
 
 def log_conversation_event(
@@ -285,18 +272,13 @@ def log_conversation_event(
     **kwargs
 ) -> None:
     """Log conversation-related events."""
-    if hasattr(logger, 'info'):
-        logger.info(
-            "Conversation event",
-            event_type=event_type,
-            conversation_id=conversation_id,
-            **kwargs
-        )
-    else:
-        logger.info(
-            f"Conversation {event_type}: {conversation_id}",
-            extra=kwargs
-        )
+    # Format the log message with event details
+    extra_info = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    message = f"Conversation {event_type}: {conversation_id}"
+    if extra_info:
+        message += f" ({extra_info})"
+    
+    logger.info(message)
 
 
 def log_tool_execution(
@@ -307,19 +289,11 @@ def log_tool_execution(
     **kwargs
 ) -> None:
     """Log tool execution events."""
-    if hasattr(logger, 'info'):
-        logger.info(
-            "Tool execution",
-            tool_name=tool_name,
-            success=success,
-            duration_seconds=duration,
-            **kwargs
-        )
-    else:
-        logger.info(
-            f"Tool {tool_name} {'succeeded' if success else 'failed'}",
-            extra={'duration_seconds': duration, **kwargs}
-        )
+    extra_info = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+    message = f"Tool {tool_name} {'succeeded' if success else 'failed'} - duration: {duration:.2f}s"
+    if extra_info:
+        message += f" ({extra_info})"
+    logger.info(message)
 
 
 # Initialize logging on import

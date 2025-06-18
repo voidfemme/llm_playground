@@ -132,10 +132,9 @@ class TestToolExecution:
     async def test_tool_execution_with_conversation_tracking(self, mcp_conversation_manager):
         """Test tool execution with conversation tracking."""
         # Create conversation and message
-        conversation = mcp_conversation_manager.create_conversation("Tool Test")
-        message = mcp_conversation_manager.add_message(
-            conversation.id, "user", "Test tool execution"
-        )
+        conversation_id = mcp_conversation_manager.create_conversation("Tool Test")
+        conversation = mcp_conversation_manager.get_conversation(conversation_id)
+        message = conversation.add_message("user", "Test tool execution")
         
         # Register mock tool
         mock_tool = MockTool("tracked_tool")
@@ -145,14 +144,14 @@ class TestToolExecution:
         result = await mcp_conversation_manager.execute_tool(
             "tracked_tool",
             {"input": "tracked execution"},
-            conversation_id=conversation.id,
+            conversation_id=conversation_id,
             message_id=message.id
         )
         
         assert result.success is True
         
         # Check that tool usage was recorded
-        updated_conv = mcp_conversation_manager.get_conversation(conversation.id)
+        updated_conv = mcp_conversation_manager.get_conversation(conversation_id)
         updated_message = updated_conv.messages[0]
         
         assert hasattr(updated_message, 'metadata')
@@ -193,10 +192,9 @@ class TestResponseWithTools:
     @pytest.mark.asyncio
     async def test_add_response_with_tools(self, mcp_conversation_manager):
         """Test adding response that executed tools."""
-        conversation = mcp_conversation_manager.create_conversation("Response Tools Test")
-        message = mcp_conversation_manager.add_message(
-            conversation.id, "user", "What time is it?"
-        )
+        conversation_id = mcp_conversation_manager.create_conversation("Response Tools Test")
+        conversation = mcp_conversation_manager.get_conversation(conversation_id)
+        message = conversation.add_message("user", "What time is it?")
         
         # Simulate tools used
         tools_used = [
@@ -205,7 +203,7 @@ class TestResponseWithTools:
         ]
         
         response = await mcp_conversation_manager.add_response_with_tools(
-            conversation.id,
+            conversation_id,
             message.id,
             "test-model",
             "The current time is shown above, and 2+2=4",
@@ -234,10 +232,9 @@ class TestResponseWithTools:
     @pytest.mark.asyncio
     async def test_add_response_with_failed_tools(self, mcp_conversation_manager):
         """Test adding response when tools fail."""
-        conversation = mcp_conversation_manager.create_conversation("Failed Tools Test")
-        message = mcp_conversation_manager.add_message(
-            conversation.id, "user", "Test failed tools"
-        )
+        conversation_id = mcp_conversation_manager.create_conversation("Failed Tools Test")
+        conversation = mcp_conversation_manager.get_conversation(conversation_id)
+        message = conversation.add_message("user", "Test failed tools")
         
         # Register a tool that will fail
         error_tool = MockTool("fail_tool", should_error=True)
@@ -248,7 +245,7 @@ class TestResponseWithTools:
         ]
         
         response = await mcp_conversation_manager.add_response_with_tools(
-            conversation.id,
+            conversation_id,
             message.id,
             "test-model",
             "Tool execution failed",
@@ -270,38 +267,35 @@ class TestToolUsageStatistics:
     @pytest.mark.asyncio
     async def test_conversation_tool_usage_statistics(self, mcp_conversation_manager):
         """Test getting tool usage statistics for a conversation."""
-        conversation = mcp_conversation_manager.create_conversation("Stats Test")
-        message1 = mcp_conversation_manager.add_message(
-            conversation.id, "user", "First message"
-        )
-        message2 = mcp_conversation_manager.add_message(
-            conversation.id, "user", "Second message"
-        )
+        conversation_id = mcp_conversation_manager.create_conversation("Stats Test")
+        conversation = mcp_conversation_manager.get_conversation(conversation_id)
+        message1 = conversation.add_message("user", "First message")
+        message2 = conversation.add_message("user", "Second message")
         
         # Execute some tools
         await mcp_conversation_manager.execute_tool(
             "get_current_time",
             {"format": "iso"},
-            conversation.id,
+            conversation_id,
             message1.id
         )
         
         await mcp_conversation_manager.execute_tool(
             "calculate",
             {"expression": "5 * 6"},
-            conversation.id,
+            conversation_id,
             message1.id
         )
         
         await mcp_conversation_manager.execute_tool(
             "calculate",
             {"expression": "10 / 2"},
-            conversation.id,
+            conversation_id,
             message2.id
         )
         
         # Get statistics
-        stats = mcp_conversation_manager.get_conversation_tool_usage(conversation.id)
+        stats = mcp_conversation_manager.get_conversation_tool_usage(conversation_id)
         
         assert stats["total_tool_executions"] == 3
         assert stats["total_errors"] == 0
@@ -324,10 +318,9 @@ class TestToolUsageStatistics:
     @pytest.mark.asyncio
     async def test_tool_usage_with_errors(self, mcp_conversation_manager):
         """Test tool usage statistics with errors."""
-        conversation = mcp_conversation_manager.create_conversation("Error Stats Test")
-        message = mcp_conversation_manager.add_message(
-            conversation.id, "user", "Test errors"
-        )
+        conversation_id = mcp_conversation_manager.create_conversation("Error Stats Test")
+        conversation = mcp_conversation_manager.get_conversation(conversation_id)
+        message = conversation.add_message("user", "Test errors")
         
         # Register error-prone tool
         error_tool = MockTool("error_prone", should_error=True)
@@ -335,14 +328,14 @@ class TestToolUsageStatistics:
         
         # Execute tools (some will fail)
         await mcp_conversation_manager.execute_tool(
-            "get_current_time", {}, conversation.id, message.id
+            "get_current_time", {}, conversation_id, message.id
         )
         
         await mcp_conversation_manager.execute_tool(
-            "error_prone", {"input": "test"}, conversation.id, message.id
+            "error_prone", {"input": "test"}, conversation_id, message.id
         )
         
-        stats = mcp_conversation_manager.get_conversation_tool_usage(conversation.id)
+        stats = mcp_conversation_manager.get_conversation_tool_usage(conversation_id)
         
         assert stats["total_tool_executions"] == 2
         assert stats["total_errors"] == 1
@@ -360,11 +353,11 @@ class TestToolRecommendations:
     @pytest.mark.asyncio
     async def test_get_tool_recommendations(self, mcp_conversation_manager):
         """Test getting tool recommendations based on message content."""
-        conversation = mcp_conversation_manager.create_conversation("Recommendations Test")
+        conversation_id = mcp_conversation_manager.create_conversation("Recommendations Test")
         
         # Test recommendations for time-related query
         recommendations = await mcp_conversation_manager.get_tool_recommendations(
-            conversation.id,
+            conversation_id,
             "What time is it right now?"
         )
         
@@ -383,10 +376,10 @@ class TestToolRecommendations:
     @pytest.mark.asyncio
     async def test_math_recommendations(self, mcp_conversation_manager):
         """Test recommendations for math-related queries."""
-        conversation = mcp_conversation_manager.create_conversation("Math Test")
+        conversation_id = mcp_conversation_manager.create_conversation("Math Test")
         
         recommendations = await mcp_conversation_manager.get_tool_recommendations(
-            conversation.id,
+            conversation_id,
             "Can you calculate 15 * 23 + 7?"
         )
         
@@ -400,10 +393,10 @@ class TestToolRecommendations:
     @pytest.mark.asyncio
     async def test_text_analysis_recommendations(self, mcp_conversation_manager):
         """Test recommendations for text analysis queries."""
-        conversation = mcp_conversation_manager.create_conversation("Text Test")
+        conversation_id = mcp_conversation_manager.create_conversation("Text Test")
         
         recommendations = await mcp_conversation_manager.get_tool_recommendations(
-            conversation.id,
+            conversation_id,
             "How many characters are in this text?"
         )
         
@@ -451,24 +444,23 @@ class TestConcurrentToolExecution:
     @pytest.mark.asyncio
     async def test_concurrent_tool_executions(self, mcp_conversation_manager):
         """Test executing multiple tools concurrently."""
-        conversation = mcp_conversation_manager.create_conversation("Concurrent Test")
-        message = mcp_conversation_manager.add_message(
-            conversation.id, "user", "Test concurrent execution"
-        )
+        conversation_id = mcp_conversation_manager.create_conversation("Concurrent Test")
+        conversation = mcp_conversation_manager.get_conversation(conversation_id)
+        message = conversation.add_message("user", "Test concurrent execution")
         
         # Execute multiple tools concurrently
         tasks = [
             mcp_conversation_manager.execute_tool(
                 "get_current_time", {"format": "iso"}, 
-                conversation.id, message.id
+                conversation_id, message.id
             ),
             mcp_conversation_manager.execute_tool(
                 "calculate", {"expression": "10 + 15"},
-                conversation.id, message.id
+                conversation_id, message.id
             ),
             mcp_conversation_manager.execute_tool(
                 "calculate", {"expression": "5 * 8"},
-                conversation.id, message.id
+                conversation_id, message.id
             )
         ]
         

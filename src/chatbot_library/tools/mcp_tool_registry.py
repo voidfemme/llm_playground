@@ -108,8 +108,16 @@ class MCPToolRegistry:
         input_schema: Optional[Dict[str, Any]] = None
     ) -> None:
         """Register a regular function as an MCP tool."""
-        tool_name = name or func.__name__
-        tool_description = description or func.__doc__ or f"Function {func.__name__}"
+        # Check for decorator configuration first
+        if hasattr(func, '_mcp_tool_config'):
+            config = func._mcp_tool_config
+            tool_name = name or config.get('name') or func.__name__
+            tool_description = description or config.get('description') or func.__doc__ or f"Function {func.__name__}"
+            if input_schema is None:
+                input_schema = config.get('input_schema')
+        else:
+            tool_name = name or func.__name__
+            tool_description = description or func.__doc__ or f"Function {func.__name__}"
         
         # Auto-generate schema from function signature if not provided
         if input_schema is None:

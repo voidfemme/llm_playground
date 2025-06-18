@@ -4,11 +4,15 @@ Integration layer between MCP tools and the conversation manager.
 
 import asyncio
 import json
-from typing import Dict, List, Any, Optional
+import time
+from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass
 
 from ..tools.mcp_tool_registry import MCPToolRegistry, mcp_tool_registry
 from ..tools.builtin_tools import register_builtin_tools
+from ..tools.iterative_execution import (
+    IterativeToolExecutor, ToolExecutionContext, IterativeExecutionResult
+)
 from .conversation_manager import ConversationManager
 from ..models.conversation import Message, Response
 
@@ -30,6 +34,7 @@ class MCPConversationManager(ConversationManager):
     def __init__(self, data_dir, tool_registry: Optional[MCPToolRegistry] = None):
         super().__init__(data_dir)
         self.tool_registry = tool_registry or mcp_tool_registry
+        self.iterative_executor = IterativeToolExecutor(self.tool_registry)
         self._setup_builtin_tools()
     
     def _setup_builtin_tools(self):
@@ -85,7 +90,7 @@ class MCPConversationManager(ConversationManager):
         except Exception as e:
             execution_time = time.time() - start_time
             
-            return ToolExecutionResult(
+            tool_result = ToolExecutionResult(
                 tool_name=tool_name,
                 success=False,
                 error=str(e),
@@ -95,6 +100,14 @@ class MCPConversationManager(ConversationManager):
                     "timestamp": time.time()
                 }
             )
+            
+            # Record failed tool usage in conversation
+            if conversation_id and message_id:
+                await self._record_tool_usage(
+                    conversation_id, message_id, tool_result
+                )
+            
+            return tool_result
     
     async def _record_tool_usage(
         self, 
@@ -170,15 +183,26 @@ class MCPConversationManager(ConversationManager):
             ]
         
         # Add the response with tool metadata
-        return self.add_response(
-            conversation_id=conversation_id,
-            message_id=message_id,
+        conversation = self.get_conversation(conversation_id)
+        if not conversation:
+            raise ValueError(f"Conversation {conversation_id} not found")
+        
+        message = conversation.get_message(message_id)
+        if not message:
+            raise ValueError(f"Message {message_id} not found")
+        
+        response = message.add_response(
             model=model,
             text=text,
             branch_name=branch_name,
             metadata=metadata,
             **kwargs
         )
+        
+        # Save the conversation
+        self.save_conversation(conversation)
+        
+        return response
     
     def get_conversation_tool_usage(self, conversation_id: str) -> Dict[str, Any]:
         """Get tool usage statistics for a conversation."""
@@ -280,3 +304,127 @@ class MCPConversationManager(ConversationManager):
         recommendations.sort(key=lambda x: x['score'], reverse=True)
         
         return recommendations[:5]  # Return top 5
+    
+    # Iterative Tool Execution Methods
+    
+    async def execute_tool_chain(
+        self,
+        initial_tool: str,
+        initial_parameters: Dict[str, Any],
+        conversation_id: str,
+        message_id: str,
+        max_iterations: int = 10,
+        max_depth: int = 5,
+        approval_callback: Optional[Callable] = None
+    ) -> IterativeExecutionResult:
+        """
+        Execute a tool that may trigger other tools in a chain.
+        
+        Args:
+            initial_tool: Name of the first tool to execute
+            initial_parameters: Parameters for the initial tool
+            conversation_id: ID of the conversation
+            message_id: ID of the message
+            max_iterations: Maximum number of tool iterations
+            max_depth: Maximum depth of tool calls
+            approval_callback: Optional callback for tool approval
+            
+        Returns:
+            Complete execution result including all iterations
+        """
+        context = ToolExecutionContext(
+            conversation_id=conversation_id,
+            message_id=message_id,
+            max_iterations=max_iterations,
+            max_depth=max_depth,
+            approval_callback=approval_callback
+        )
+        
+        result = await self.iterative_executor.execute_tool_chain(
+            initial_tool, initial_parameters, context
+        )
+        
+        # Record the execution in conversation metadata
+        await self._record_iterative_execution(conversation_id, message_id, result)
+        
+        return result
+    
+    async def _record_iterative_execution(
+        self,
+        conversation_id: str,
+        message_id: str,
+        result: IterativeExecutionResult
+    ):
+        """Record iterative tool execution in conversation metadata."""
+        conversation = self.get_conversation(conversation_id)
+        if not conversation:
+            return
+        
+        message = conversation.get_message(message_id)
+        if not message:
+            return
+        
+        # Add execution summary to message metadata
+        if not hasattr(message, 'metadata') or message.metadata is None:
+            message.metadata = {}
+        
+        if 'iterative_executions' not in message.metadata:
+            message.metadata['iterative_executions'] = []
+        
+        execution_summary = self.iterative_executor.get_execution_summary(result)
+        execution_summary['timestamp'] = time.time()
+        
+        message.metadata['iterative_executions'].append(execution_summary)
+        
+        # Save the conversation
+        self.save_conversation(conversation)
+    
+    def get_iterative_execution_stats(self, conversation_id: str) -> Dict[str, Any]:
+        """Get statistics about iterative tool executions in a conversation."""
+        conversation = self.get_conversation(conversation_id)
+        if not conversation:
+            return {}
+        
+        total_executions = 0
+        total_tools_used = 0
+        total_execution_time = 0.0
+        loop_detections = 0
+        max_iterations_reached = 0
+        
+        for message in conversation.messages:
+            if hasattr(message, 'metadata') and message.metadata:
+                executions = message.metadata.get('iterative_executions', [])
+                
+                for execution in executions:
+                    total_executions += 1
+                    total_tools_used += execution.get('total_tools_executed', 0)
+                    total_execution_time += execution.get('execution_time_seconds', 0)
+                    
+                    if execution.get('loop_detected'):
+                        loop_detections += 1
+                    
+                    if execution.get('max_iterations_reached'):
+                        max_iterations_reached += 1
+        
+        return {
+            'total_iterative_executions': total_executions,
+            'total_tools_in_chains': total_tools_used,
+            'total_execution_time': round(total_execution_time, 3),
+            'average_tools_per_chain': (
+                round(total_tools_used / total_executions, 2) 
+                if total_executions > 0 else 0
+            ),
+            'loop_detections': loop_detections,
+            'max_iterations_reached': max_iterations_reached
+        }
+    
+    async def approve_tool_execution(self, tool_use_id: str) -> bool:
+        """Approve a tool execution that requires human approval."""
+        # This is a placeholder - in a real implementation, this would
+        # connect to a UI or notification system for human approval
+        return True
+    
+    def set_iterative_limits(self, max_iterations: int = 10, max_depth: int = 5):
+        """Set limits for iterative tool execution."""
+        self.iterative_executor.max_iterations = max_iterations
+        self.iterative_executor.max_depth = max_depth

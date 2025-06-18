@@ -150,29 +150,36 @@ def conversation_manager(temp_data_dir):
     """Create a ConversationManager for testing."""
     manager = ConversationManager(temp_data_dir)
     
+    # Mock API function for testing
+    def mock_api_function(context, **kwargs):
+        return {"text": f"Mock response from {kwargs.get('model', 'unknown')}"}
+    
     # Register test models
     manager.register_model(
         "test-basic",
+        mock_api_function,
         ChatbotCapabilities(function_calling=False, image_understanding=False),
-        {"provider": "test", "cost": "free"}
+        provider="test", cost="free"
     )
     manager.register_model(
         "test-vision",
+        mock_api_function,
         ChatbotCapabilities(
             function_calling=False, 
             image_understanding=True, 
             supported_images=["image/png"]
         ),
-        {"provider": "test", "cost": "low"}
+        provider="test", cost="low"
     )
     manager.register_model(
         "test-full",
+        mock_api_function,
         ChatbotCapabilities(
             function_calling=True, 
             image_understanding=True,
             supported_images=["image/png", "image/jpeg"]
         ),
-        {"provider": "test", "cost": "medium"}
+        provider="test", cost="medium"
     )
     
     return manager
@@ -193,18 +200,16 @@ def tool_registry():
 @pytest.fixture
 async def sample_conversation(conversation_manager):
     """Create a sample conversation for testing."""
-    conversation = conversation_manager.create_conversation("Test Conversation")
+    conversation_id = conversation_manager.create_conversation("Test Conversation")
+    conversation = conversation_manager.get_conversation(conversation_id)
     
     # Add a message and response
-    message = conversation_manager.add_message(
-        conversation.id, 
+    message = conversation.add_message(
         "test-user", 
         "Hello, this is a test message"
     )
     
-    response = conversation_manager.add_response(
-        conversation.id,
-        message.id,
+    response = message.add_response(
         "test-basic",
         "Hello! This is a test response.",
         metadata={"test": True}

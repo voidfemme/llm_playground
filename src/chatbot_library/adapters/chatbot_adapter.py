@@ -38,6 +38,13 @@ class ChatbotParameters:
         temperature (float): The temperature value for controlling response randomness.
         tools (list[Tool]): A list of available tools for the chatbot.
         capabilities (ChatbotCapabilities): The capabilities of the chatbot.
+        
+        # Prompt template support
+        system_template_id (str): ID of the system prompt template to use.
+        thinking_mode (str): Default thinking mode ("none", "step_by_step", "analytical", etc.).
+        thinking_template_name (str): Name of the thinking template to use.
+        prompt_variables (dict): Default variables for prompt templates.
+        enable_thinking_trace (bool): Whether to capture and store thinking processes.
     """
 
     model_name: str
@@ -48,6 +55,13 @@ class ChatbotParameters:
     temperature: float
     tools: list
     capabilities: ChatbotCapabilities
+    
+    # Prompt template support
+    system_template_id: str = ""
+    thinking_mode: str = "none"
+    thinking_template_name: str = ""
+    prompt_variables: dict = field(default_factory=dict)
+    enable_thinking_trace: bool = False
 
 
 class ChatbotAdapter(ABC):

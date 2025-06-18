@@ -142,7 +142,7 @@ class WeatherTool(MCPTool):
                 "unit": unit
             }
             
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             raise ValueError(f"Failed to fetch weather data: {e}")
 
 
@@ -188,14 +188,21 @@ class CalculatorTool(MCPTool):
     async def execute(self, expression: str, precision: int = 2) -> Dict[str, Any]:
         """Execute the calculator tool."""
         # Sanitize the expression to prevent code injection
-        allowed_chars = set('0123456789+-*/.() ')
+        allowed_chars = set('0123456789+-*/.(),abcdefghijklmnopqrstuvwxyz ')
         allowed_functions = {'abs', 'round', 'min', 'max', 'pow'}
         
-        # Basic sanitization
-        sanitized = ''.join(c for c in expression if c in allowed_chars)
+        # Basic sanitization - allow letters for function names
+        sanitized = ''.join(c for c in expression.lower() if c in allowed_chars)
+        
+        # Check that any alphabetic sequences are allowed functions
+        import re
+        function_names = re.findall(r'[a-z]+', sanitized)
+        for func_name in function_names:
+            if func_name not in allowed_functions:
+                raise ValueError("Invalid expression")
         
         if not sanitized.strip():
-            raise ValueError("Invalid mathematical expression")
+            raise ValueError("Invalid expression")
         
         try:
             # Use eval with restricted environment for safety
@@ -287,6 +294,73 @@ async def decode_base64(encoded_text: str) -> str:
         raise ValueError(f"Invalid base64 encoding: {e}")
 
 
+# Iterative Tools - these can trigger other tools
+
+@mcp_tool(
+    name="analyze_and_search",
+    description="Analyze text and search for additional information if needed"
+)
+async def analyze_and_search(text: str, search_terms: Optional[str] = None) -> Dict[str, Any]:
+    """Analyze text and optionally search for more information."""
+    analysis = {
+        "character_count": len(text),
+        "word_count": len(text.split()),
+        "contains_numbers": any(char.isdigit() for char in text),
+        "contains_calculations": any(op in text for op in ['+', '-', '*', '/', '='])
+    }
+    
+    result = {
+        "analysis": analysis,
+        "original_text": text
+    }
+    
+    # If text contains mathematical expressions, trigger calculator
+    if analysis["contains_calculations"]:
+        import re
+        # Extract potential calculations
+        expressions = re.findall(r'[\d\+\-\*/\(\)\s\.]+', text)
+        if expressions and len(expressions[0].strip()) > 1:
+            result["next_tools"] = ["calculate"]
+            result["suggested_calculation"] = expressions[0].strip()
+    
+    return result
+
+
+@mcp_tool(
+    name="weather_and_time",
+    description="Get current time and weather for a location"
+)
+async def weather_and_time(location: str = "New York") -> Dict[str, Any]:
+    """Get both current time and weather information."""
+    import datetime
+    
+    result = {
+        "location": location,
+        "current_time": datetime.datetime.now().isoformat(),
+        "next_tools": ["get_current_time", "get_weather"]
+    }
+    
+    return result
+
+
+@mcp_tool(
+    name="smart_calculator",
+    description="Perform calculations and optionally format results"
+)
+async def smart_calculator(expression: str, format_result: bool = True) -> Dict[str, Any]:
+    """Perform calculation and optionally trigger text formatting."""
+    # This will use the regular calculator but may trigger text length counting
+    result = {
+        "expression": expression,
+        "next_tools": ["calculate"]
+    }
+    
+    if format_result:
+        result["next_tools"].append("text_length")
+    
+    return result
+
+
 # Tool factory for registering all built-in tools
 def register_builtin_tools(registry, weather_api_key: Optional[str] = None):
     """Register all built-in tools with the registry."""
@@ -298,8 +372,53 @@ def register_builtin_tools(registry, weather_api_key: Optional[str] = None):
     if weather_api_key:
         registry.register_tool(WeatherTool(api_key=weather_api_key))
     
-    # Function-based tools are automatically discovered if using discovery
-    # Or manually register them:
-    registry.register_function_as_tool(count_text_length)
-    registry.register_function_as_tool(encode_base64)
-    registry.register_function_as_tool(decode_base64)
+    # Function-based tools with decorator configuration
+    # Use the decorator config to get proper names
+    config = count_text_length._mcp_tool_config
+    registry.register_function_as_tool(
+        count_text_length,
+        name=config.get('name'),
+        description=config.get('description'),
+        input_schema=config.get('input_schema')
+    )
+    
+    config = encode_base64._mcp_tool_config
+    registry.register_function_as_tool(
+        encode_base64,
+        name=config.get('name'),
+        description=config.get('description'),
+        input_schema=config.get('input_schema')
+    )
+    
+    config = decode_base64._mcp_tool_config
+    registry.register_function_as_tool(
+        decode_base64,
+        name=config.get('name'),
+        description=config.get('description'),
+        input_schema=config.get('input_schema')
+    )
+    
+    # Register iterative tools
+    config = analyze_and_search._mcp_tool_config
+    registry.register_function_as_tool(
+        analyze_and_search,
+        name=config.get('name'),
+        description=config.get('description'),
+        input_schema=config.get('input_schema')
+    )
+    
+    config = weather_and_time._mcp_tool_config
+    registry.register_function_as_tool(
+        weather_and_time,
+        name=config.get('name'),
+        description=config.get('description'),
+        input_schema=config.get('input_schema')
+    )
+    
+    config = smart_calculator._mcp_tool_config
+    registry.register_function_as_tool(
+        smart_calculator,
+        name=config.get('name'),
+        description=config.get('description'),
+        input_schema=config.get('input_schema')
+    )

@@ -117,6 +117,10 @@ class ConversationManager:
         """Get a conversation by ID."""
         return self.conversations.get(conversation_id)
     
+    def save_conversation(self, conversation: Conversation) -> None:
+        """Save a conversation to disk manually."""
+        self._save_conversation(conversation)
+    
     def list_conversations(self) -> List[Dict[str, Any]]:
         """
         List all conversations with basic metadata.
